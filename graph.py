@@ -27,12 +27,6 @@ def fetch_temperature_vs_crashes_data():
     return data
 
 
-    data = cursor.fetchall()
-    conn.close()
-    print(len(data))
-    return data
-
-
 
 def make_scatter_plot(data):
     """Create scatter plot for Temperature vs Number of Crashes"""

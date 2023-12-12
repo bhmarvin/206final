@@ -58,7 +58,7 @@ def insert_crash_data(cursor, entry):
     except sqlite3.Error as e:
         print("SQLite error:", e)
 
-def fetch_api_data(start_date, end_date, start_index):
+def fetch_api_data(start_date, end_date):
     """Fetch API data from NHTSA DOT API"""
     url = "https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseList"
     params = {
