@@ -2,11 +2,11 @@ import sqlite3
 import matplotlib.pyplot as plt
 import numpy as np
 
-def make_scatter_plot():
+def fetch_temperature_vs_crashes_data():
+    """Fetch data for Temperature vs Number of Crashes analysis"""
     conn = sqlite3.connect('proj_data.db')
     cursor = conn.cursor()
 
-    # Fetch data for the analysis
     cursor.execute('''
         SELECT
             daily_data_meteostat.date,
@@ -19,32 +19,47 @@ def make_scatter_plot():
         ON
             strftime('%Y-%m-%d', daily_data_meteostat.date) = strftime('%Y-%m-%d', crashes.CrashDate)
         GROUP BY
-            daily_data_meteostat.date
+            daily_data_meteostat.date, daily_data_meteostat.temperature_avg
     ''')
+
     data = cursor.fetchall()
-
-    # Close the database connection
     conn.close()
+    return data
 
-    # Extract data for plotting
-    dates = [entry[0] for entry in data]
+
+    data = cursor.fetchall()
+    conn.close()
+    print(len(data))
+    return data
+
+
+
+def make_scatter_plot(data):
+    """Create scatter plot for Temperature vs Number of Crashes"""
+    
     temperatures = [entry[1] for entry in data]
     num_crashes = [entry[2] if entry[2] else 0 for entry in data]  # Replace None with 0 if no crashes
-
+    
     # Scatter plot: Temperature vs Number of Crashes
     plt.figure(figsize=(10, 6))
-    plt.scatter(temperatures, num_crashes, color='red', alpha=0.5)
-    plt.title('Temperature vs Number of Crashes')
-    plt.xlabel('Temperature (Average)')
-    plt.ylabel('Number of Crashes')
-    plt.grid(True)
+    plt.scatter(temperatures, num_crashes, color='skyblue', edgecolors='black', alpha=0.7)
+    
+    # Add title and labels
+    plt.title('Scatter Plot: Temperature vs Number of Crashes', fontsize=16)
+    plt.xlabel('Temperature (Average)', fontsize=14)
+    plt.ylabel('Number of Crashes', fontsize=14)
+    
+    # Add gridlines
+    plt.grid(True, linestyle='--', alpha=0.5)
+    
+    # Show the plot
     plt.show()
 
-def make_bar_chart():
+def fetch_temperature_bins_vs_fatal_crashes_data():
+    """Fetch data for Temperature Bins vs Average Fatal Crashes per Day analysis"""
     conn = sqlite3.connect('proj_data.db')
     cursor = conn.cursor()
 
-    # Fetch data for the analysis
     cursor.execute('''
         SELECT
             CASE
@@ -57,7 +72,6 @@ def make_bar_chart():
                 WHEN temperature_avg BETWEEN 61 AND 70 THEN '61-70'
                 WHEN temperature_avg BETWEEN 71 AND 80 THEN '71-80'
                 WHEN temperature_avg BETWEEN 81 AND 90 THEN '81-90'
-                -- Add more ranges as needed
                 ELSE 'Unknown'
             END as temperature_bin,
             COUNT(crashes.id) as num_fatal_crashes,
@@ -69,17 +83,19 @@ def make_bar_chart():
         ON
             strftime('%Y-%m-%d', daily_data_meteostat.date) = strftime('%Y-%m-%d', crashes.CrashDate)
         WHERE
-            crashes.Fatals > 0  -- Consider only fatal crashes
+            crashes.Fatals > 0
         GROUP BY
             temperature_bin
         ORDER BY
             temperature_bin;
     ''')
+
     data = cursor.fetchall()
-
-    # Close the database connection
     conn.close()
+    return data
 
+def make_bar_chart(data):
+    """Create bar chart for Temperature Bins vs Average Fatal Crashes per Day"""
     # Extract data for plotting
     temperature_bins = [entry[0] for entry in data]
     num_fatal_crashes = [entry[1] for entry in data]
@@ -104,6 +120,100 @@ def make_bar_chart():
     plt.yticks(fontsize=12)
     plt.show()
 
+    return temperature_bins,num_fatal_crashes,num_days
 
-make_bar_chart()
-make_scatter_plot() 
+def fetch_crash_details_data():
+    """Fetch data for crashes by intersection type, involvement of drunk drivers, and counts for each weekday"""
+    conn = sqlite3.connect('proj_data.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT
+            crash_details.id,
+            crash_details.drunk,
+            crash_details.weekday,
+            crash_details.intersection_type
+        FROM
+            crash_details
+    ''')
+
+    data = cursor.fetchall()
+    conn.close()
+    return data
+
+def analyze_crash_details(data):
+    """Analyze crash details and print counts for different categories"""
+    # Count crashes by intersection type
+    intersection_counts = {}
+    for entry in data:
+        intersection_type = entry[3]
+        if intersection_type in intersection_counts:
+            intersection_counts[intersection_type] += 1
+        else:
+            intersection_counts[intersection_type] = 1
+
+    # Count crashes involving drunk drivers
+    drunk_counts = {"Drunk": 0, "Not Drunk": 0}
+    for entry in data:
+        drunk_status = "Drunk" if entry[1] == 1 else "Not Drunk"
+        drunk_counts[drunk_status] += 1
+
+    # Count crashes for each weekday
+    weekday_counts = {int(i): 0 for i in range(1,8)}
+    for entry in data:
+        weekday = entry[2]
+        weekday_counts[weekday] += 1
+
+    return intersection_counts, drunk_counts, weekday_counts
+
+def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts):
+    """Print counts for crash details"""
+    print("\nCrash Details Counts:")
+    print("---------------------")
+    
+    # Intersection Type Counts
+    print("\n1. Intersection Type Counts:")
+    for intersection_type, count in intersection_counts.items():
+        print(f"   - {intersection_type}: {count}")
+
+    # Drunk Driver Involvement Counts
+    print("\n2. Drunk Driver Involvement Counts:")
+    for drunk_status, count in drunk_counts.items():
+        print(f"   - {drunk_status}: {count}")
+
+    # Weekday Counts
+    print("\n3. Weekday Counts(1 corresponds to monday):")
+    for weekday, count in weekday_counts.items():
+        print(f"   - Weekday {weekday}: {count}")
+
+def main():
+    # Fetch data for scatter plot
+    temperature_vs_crashes_data = fetch_temperature_vs_crashes_data()
+
+    # Create scatter plot
+    make_scatter_plot(temperature_vs_crashes_data)
+
+    # Fetch data for bar chart
+    temperature_bins_vs_fatal_crashes_data = fetch_temperature_bins_vs_fatal_crashes_data()
+
+    # Create bar chart
+    bins, crashes, days = make_bar_chart(temperature_bins_vs_fatal_crashes_data)
+
+    # Display calculated values
+    print("\nCalculated Values:")
+    print("------------------")
+    print("\n1. Bar Chart: Temperature Bins vs Average Fatal Crashes per Day")
+    for num,bin in enumerate(bins):
+        print(f"   - Temperature Bin: {bin}, Average Fatal Crashes per Day: {crashes[num]/days[num]}")
+    
+        # Fetch data for crash details
+    crash_details_data = fetch_crash_details_data()
+
+    # Analyze crash details
+    intersection_counts, drunk_counts, weekday_counts = analyze_crash_details(crash_details_data)
+
+    # Print counts for crash details
+    print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts)
+
+if __name__ == "__main__":
+    main()
