@@ -7,18 +7,56 @@ def create_crashes_table(cursor):
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS crashes (
             id INTEGER PRIMARY KEY,
-            CountyName TEXT,
+            county_id INTEGER,
             CrashDate TEXT,
             Fatals INTEGER,
             Peds INTEGER,
             Persons INTEGER,
             St_Case INTEGER,
             State INTEGER,
-            StateName TEXT,
             TotalVehicles INTEGER,
-            UNIQUE(St_Case) ON CONFLICT IGNORE
+            UNIQUE(St_Case) ON CONFLICT IGNORE,
+            FOREIGN KEY (county_id) REFERENCES counties(county_id)
         )
     ''')
+
+def create_counties_table(cursor):
+    """Create counties table in the database if not exists"""
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS counties (
+            county_id INTEGER PRIMARY KEY,
+            county_name TEXT UNIQUE ON CONFLICT IGNORE
+        )
+    ''')
+
+def insert_county(cursor, county_name):
+    """Insert county into counties table and return its ID"""
+    cursor.execute('''
+        INSERT OR IGNORE INTO counties (county_name) VALUES (?)
+    ''', (county_name,))
+    cursor.execute('''
+        SELECT county_id FROM counties WHERE county_name = ?
+    ''', (county_name,))
+    return cursor.fetchone()[0]
+
+def insert_crash_data(cursor, entry):
+    """Insert crash data into the database"""
+    county_id = insert_county(cursor, entry["CountyName"])
+    try:
+        cursor.execute('''
+            INSERT OR IGNORE INTO crashes VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            county_id,
+            datetime.utcfromtimestamp(int(entry["CrashDate"][6:16])),
+            entry["Fatals"],
+            entry["Peds"],
+            entry["Persons"],
+            entry["St_Case"],
+            entry["State"],
+            entry["TotalVehicles"],
+        ))
+    except sqlite3.Error as e:
+        print("SQLite error:", e)
 
 def fetch_api_data(start_date, end_date, start_index):
     """Fetch API data from NHTSA DOT API"""
@@ -36,25 +74,6 @@ def fetch_api_data(start_date, end_date, start_index):
     response = requests.get(url, params=params)
     return response.json()["Results"]
 
-def insert_crash_data(cursor, entry):
-    """Insert crash data into the database"""
-    try:
-        cursor.execute('''
-            INSERT OR IGNORE INTO crashes VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            entry["CountyName"],
-            datetime.utcfromtimestamp(int(entry["CrashDate"][6:16])),
-            entry["Fatals"],
-            entry["Peds"],
-            entry["Persons"],
-            entry["St_Case"],
-            entry["State"],
-            entry["StateName"],
-            entry["TotalVehicles"],
-        ))
-    except sqlite3.Error as e:
-        print("SQLite error:", e)
-
 def update_start_index(end_index):
     """Update the start index in the file"""
     with open('start_index.txt', 'w') as file:
@@ -69,7 +88,7 @@ def fetch_and_insert_crashes(cursor, start_date, end_date):
     if end_index >= len(api_data[0]):
         print("Done fetching data for this time period")
         return
-    #INSERTS THE NEXT 25
+    # INSERTS THE NEXT 25
     for entry in api_data[0][start_index:end_index]:
         insert_crash_data(cursor, entry)
 
@@ -79,6 +98,9 @@ def fetch_and_insert_crashes(cursor, start_date, end_date):
 # SQLite database connection
 conn = sqlite3.connect('proj_data.db')
 cursor = conn.cursor()
+
+# Create counties table in the database if not exists
+create_counties_table(cursor)
 
 # Create crashes table in the database if not exists
 create_crashes_table(cursor)
