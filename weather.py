@@ -3,6 +3,9 @@ from meteostat import Point, Daily
 import sqlite3
 import pandas as pd  # Import pandas
 
+def convert_to_farenheit(temp):
+    return (temp * (9/5)) + 32
+
 # Function to fetch and insert data into the database
 def fetch_and_insert_data(cursor, start_date, end_date):
     # Create Point for Detroit, MI
@@ -15,9 +18,9 @@ def fetch_and_insert_data(cursor, start_date, end_date):
     # Insert unique Meteostat data into the database
     for index, row in data.iterrows():
         date_value = index.date()
-        temperature_avg = row['tavg']
-        temperature_min = row['tmin']
-        temperature_max = row['tmax']
+        temperature_avg = convert_to_farenheit(row['tavg'])
+        temperature_min = convert_to_farenheit(row['tmin'])
+        temperature_max = convert_to_farenheit(row['tmax'])
 
         cursor.execute('''
             INSERT OR IGNORE INTO daily_data_meteostat VALUES (NULL, ?, ?, ?, ?)
