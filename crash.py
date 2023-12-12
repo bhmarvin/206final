@@ -82,7 +82,7 @@ def update_start_index(end_index):
 def fetch_and_insert_crashes(cursor, start_date, end_date):
     """Fetch and insert crashes data into the database"""
     start_index = int(open('start_index.txt', 'r').read().strip())
-    api_data = fetch_api_data(start_date, end_date, start_index)
+    api_data = fetch_api_data(start_date, end_date)
     end_index = start_index + 25
 
     if end_index >= len(api_data[0]):
