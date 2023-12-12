@@ -54,7 +54,7 @@ def fetch_and_insert_crash_details(cursor, start_id):
             if results is not None:
                 drunk = results['CrashResultSet']['DRUNK_DR']
                 intersection_type = results['CrashResultSet']['TYP_INTNAME']
-                # 7 = Saturday, 0 = Sunday
+                #1 = monday, 7 = sunday
                 weekDay = results['CrashResultSet']['DAY_WEEK']
 
                 cursor.execute('''
