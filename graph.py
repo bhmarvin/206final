@@ -132,7 +132,7 @@ def fetch_crash_details_data():
             crash_details.id,
             crash_details.drunk,
             crash_details.weekday,
-            crash_details.intersection_type
+            crash_details.type_id
         FROM
             crash_details
     ''')
@@ -166,7 +166,7 @@ def analyze_crash_details(data):
 
     return intersection_counts, drunk_counts, weekday_counts
 
-def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts):
+def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts, ):
     """Print counts for crash details"""
 
     with open('calcs.txt', 'a') as fhand:
@@ -174,9 +174,12 @@ def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts
         fhand.write("---------------------")
         
         # Intersection Type Counts
+        conn = sqlite3.connect('proj_data.db')
+        cursor = conn.cursor()
         fhand.write("\n1. Intersection Type Counts:\n")
         for intersection_type, count in intersection_counts.items():
-            fhand.write(f"   - {intersection_type}: {count}\n")
+            cursor.execute("Select type_name FROM intersection_types where type_id = ?", (intersection_type,))
+            fhand.write(f"   - {cursor.fetchone()[0]}: {count}\n")
 
         # Drunk Driver Involvement Counts
         fhand.write("\n2. Drunk Driver Involvement Counts:\n")
