@@ -1,0 +1,35 @@
+
+Calculated Values:------------------
+1. Bar Chart: Temperature Bins vs Average Fatal Crashes per Day
+   - Temperature Bin: 11-20, Average Fatal Crashes per Day: 2.0
+   - Temperature Bin: 21-30, Average Fatal Crashes per Day: 2.1875
+   - Temperature Bin: 31-40, Average Fatal Crashes per Day: 2.3389830508474576
+   - Temperature Bin: 41-50, Average Fatal Crashes per Day: 2.549019607843137
+   - Temperature Bin: 51-60, Average Fatal Crashes per Day: 3.090909090909091
+   - Temperature Bin: 61-70, Average Fatal Crashes per Day: 3.4615384615384617
+   - Temperature Bin: 71-80, Average Fatal Crashes per Day: 4.413793103448276
+   - Temperature Bin: 81-90, Average Fatal Crashes per Day: 3.0
+   - Temperature Bin: Unknown, Average Fatal Crashes per Day: 2.4871794871794872
+
+Crash Details Counts:---------------------
+1. Intersection Type Counts:
+   - Not an Intersection: 684
+   - Four-Way Intersection: 205
+   - T-Intersection: 73
+   - Not Reported: 3
+   - Roundabout: 1
+   - Y-Intersection: 4
+   - Five Point, or More: 1
+
+2. Drunk Driver Involvement Counts:
+   - Drunk: 270
+   - Not Drunk: 701
+
+3. Weekday Counts(1 corresponds to monday):
+   - Weekday 1: 148
+   - Weekday 2: 135
+   - Weekday 3: 117
+   - Weekday 4: 123
+   - Weekday 5: 122
+   - Weekday 6: 157
+   - Weekday 7: 169

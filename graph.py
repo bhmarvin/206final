@@ -168,23 +168,25 @@ def analyze_crash_details(data):
 
 def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts):
     """Print counts for crash details"""
-    print("\nCrash Details Counts:")
-    print("---------------------")
-    
-    # Intersection Type Counts
-    print("\n1. Intersection Type Counts:")
-    for intersection_type, count in intersection_counts.items():
-        print(f"   - {intersection_type}: {count}")
 
-    # Drunk Driver Involvement Counts
-    print("\n2. Drunk Driver Involvement Counts:")
-    for drunk_status, count in drunk_counts.items():
-        print(f"   - {drunk_status}: {count}")
+    with open('calcs.txt', 'a') as fhand:
+        fhand.write("\nCrash Details Counts:")
+        fhand.write("---------------------")
+        
+        # Intersection Type Counts
+        fhand.write("\n1. Intersection Type Counts:\n")
+        for intersection_type, count in intersection_counts.items():
+            fhand.write(f"   - {intersection_type}: {count}\n")
 
-    # Weekday Counts
-    print("\n3. Weekday Counts(1 corresponds to monday):")
-    for weekday, count in weekday_counts.items():
-        print(f"   - Weekday {weekday}: {count}")
+        # Drunk Driver Involvement Counts
+        fhand.write("\n2. Drunk Driver Involvement Counts:\n")
+        for drunk_status, count in drunk_counts.items():
+            fhand.write(f"   - {drunk_status}: {count}\n")
+
+        # Weekday Counts
+        fhand.write("\n3. Weekday Counts(1 corresponds to monday):\n")
+        for weekday, count in weekday_counts.items():
+            fhand.write(f"   - Weekday {weekday}: {count}\n")
 
 def main():
     # Fetch data for scatter plot
@@ -198,14 +200,14 @@ def main():
 
     # Create bar chart
     bins, crashes, days = make_bar_chart(temperature_bins_vs_fatal_crashes_data)
-
-    # Display calculated values
-    print("\nCalculated Values:")
-    print("------------------")
-    print("\n1. Bar Chart: Temperature Bins vs Average Fatal Crashes per Day")
-    for num,bin in enumerate(bins):
-        print(f"   - Temperature Bin: {bin}, Average Fatal Crashes per Day: {crashes[num]/days[num]}")
-    
+    with open('calcs.txt', 'w')  as fhand:
+        # Display calculated values
+        fhand.write("\nCalculated Values:")
+        fhand.write("------------------")
+        fhand.write("\n1. Bar Chart: Temperature Bins vs Average Fatal Crashes per Day\n")
+        for num,bin in enumerate(bins):
+            fhand.write(f"   - Temperature Bin: {bin}, Average Fatal Crashes per Day: {crashes[num]/days[num]}\n")
+        
         # Fetch data for crash details
     crash_details_data = fetch_crash_details_data()
 
