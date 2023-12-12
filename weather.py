@@ -51,7 +51,7 @@ def read_last_end_date():
         return datetime.strptime(last_end_date_str, '%Y-%m-%d')
     except FileNotFoundError:
         # If the file is not found, use an initial start date
-        return datetime(2020, 1, 1)
+        return datetime(2019, 12, 31)
 
 def main():
     # SQLite database connection
