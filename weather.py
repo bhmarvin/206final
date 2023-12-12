@@ -55,7 +55,7 @@ try:
     last_end_date = datetime.strptime(last_end_date_str, '%Y-%m-%d')
 except FileNotFoundError:
     # If the file is not found, use an initial start date
-    last_end_date = datetime(2018, 1, 1)
+    last_end_date = datetime(2020, 1, 1)
 
 # Set time period for the current fetch
 start_date_current = last_end_date + timedelta(days=1)

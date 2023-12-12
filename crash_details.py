@@ -20,7 +20,6 @@ cursor.execute('''
 conn.commit()
 
 def get_case_details(state_case, case_year, state):
-    print("GETTING DETAILS")
     base_url = "https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails"
     params = {
         "stateCase": state_case,
@@ -43,24 +42,33 @@ def fetch_and_insert_crashes(cursor, start_id):
     for id in range(start_id,end_id):
         cursor.execute("SELECT ST_Case, State, CrashDate FROM crashes WHERE id = ?", (id,))
         data = cursor.fetchone()
+        print(data)
         if data is not None:
             st_case, state_code, date = data
             year = date.split('-')[0]
             case_details = get_case_details(st_case,year,state_code)
-            results = case_details["Results"][0][0]
-            drunk = results['CrashResultSet']['DRUNK_DR']
-            intersection_type =results['CrashResultSet']['TYP_INTNAME']
-            #7 = saturday, 0 = sunday
-            weekDay = results['CrashResultSet']['DAY_WEEK']
+            try:
+                results = case_details["Results"][0][0]
+            except IndexError as e:
+                print(f"Case id {id} not found")
+                
+            if results is not None:
+                drunk = results['CrashResultSet']['DRUNK_DR']
+                intersection_type =results['CrashResultSet']['TYP_INTNAME']
+                #7 = saturday, 0 = sunday
+                weekDay = results['CrashResultSet']['DAY_WEEK']
 
-            cursor.execute('''
-                INSERT OR IGNORE INTO crash_details VALUES (?, ?, ?, ?)
-            ''', (id, drunk, weekDay, intersection_type))
-
+                cursor.execute('''
+                    INSERT OR IGNORE INTO crash_details VALUES (?, ?, ?, ?)
+                ''', (id, drunk, weekDay, intersection_type))
+    with open('details_index.txt', 'w') as file:
+        file.write(str(end_id))
     conn.commit()
 
 
-fetch_and_insert_crashes(cursor,0)
+with open('details_index.txt', 'r') as file:
+    start_index = int(file.read().strip())
+fetch_and_insert_crashes(cursor,start_index)
 # Commit the changes to the database
 conn.commit()
 

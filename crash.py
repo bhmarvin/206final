@@ -24,7 +24,7 @@ cursor.execute('''
 ''')
 conn.commit()
 
-def fetch_and_insert_crashes(cursor, start_date, end_date, limit=25):
+def fetch_and_insert_crashes(cursor, start_date, end_date):
     # Make the API request with parameters for the entire timeframe
     url = "https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseList"
     params = {
@@ -43,9 +43,8 @@ def fetch_and_insert_crashes(cursor, start_date, end_date, limit=25):
     with open('start_index.txt', 'r') as file:
         start_index = int(file.read().strip())
     results = api_data["Results"]
-    end_index = start_index + 24
+    end_index = start_index + 25
     results = results[0]
-
     if end_index >= len(results):
         print("Done fetching data for this time period")
         return
@@ -74,8 +73,8 @@ def fetch_and_insert_crashes(cursor, start_date, end_date, limit=25):
 conn.commit()
 
 # Set the time period for the entire timeframe
-start_date_initial = datetime(2014, 1, 1)
-end_date_initial = datetime(2015, 12, 31)
+start_date_initial = datetime(2020, 1, 1)
+end_date_initial = datetime(2021, 1, 1)
 
 # Fetch and insert the next 25 records for Michigan
 fetch_and_insert_crashes(cursor, start_date_initial, end_date_initial)
