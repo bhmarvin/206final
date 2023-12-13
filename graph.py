@@ -184,6 +184,100 @@ def print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts
         fhand.write("\n3. Weekday Counts(1 corresponds to monday):\n")
         for weekday, count in weekday_counts.items():
             fhand.write(f"   - Weekday {weekday}: {count}\n")
+    
+
+def make_drunk_fatalities_comparison_chart():
+    """Create a bar chart for the count of deaths based on the number of drunk drivers"""
+    conn = sqlite3.connect('proj_data.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT
+            drunk,
+            COUNT(crashes.id) as total_fatalities
+        FROM
+            crash_details
+        LEFT JOIN
+            crashes
+        ON
+            crash_details.id = crashes.id
+        GROUP BY
+            drunk;
+    ''')
+
+    data = cursor.fetchall()
+    conn.close()
+
+    drunk_counts = [entry[1] if entry[1] else 0 for entry in data]  # Replace None with 0
+    labels = [f'{entry[0]} Drunk Drivers' if entry[0] else 'No Drunk Drivers' for entry in data]
+
+    # Bar chart: Count of Drunk Drivers vs Total Fatalities
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bars = ax.bar(labels, drunk_counts, color='skyblue', alpha=0.7, edgecolor='black', linewidth=1.5)
+
+    # Add data labels on each bar with adjustments for better visibility
+    for bar, label in zip(bars, drunk_counts):
+        ax.text(bar.get_x() + bar.get_width() / 2 - 0.1, bar.get_height() + 0.01,
+                f'{label}', ha='center', va='bottom', color='black', fontsize=10, rotation=45, rotation_mode='anchor')
+
+    plt.title('Count of Drunk Drivers vs Total Fatalities', fontsize=16)
+    plt.xlabel('Drunk Driver Count', fontsize=14)
+    plt.ylabel('Total Fatalities', fontsize=14)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.xticks(rotation=45, ha='right', fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.tight_layout()  # Adjust layout to prevent labels from going out of the window
+    plt.show()
+
+def make_intersection_pie():
+    """Create a pie chart for intersection types distribution"""
+    conn = sqlite3.connect('proj_data.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT
+            intersection_types.type_name,
+            COUNT(crash_details.id) as num_crashes
+        FROM
+            crash_details
+        LEFT JOIN
+            intersection_types
+        ON
+            crash_details.type_id = intersection_types.type_id
+        GROUP BY
+            crash_details.type_id
+    ''')
+
+    data = cursor.fetchall()
+    conn.close()
+
+    # Extract data for plotting
+    types = [entry[0] if entry[0] else 'Unknown' for entry in data]
+    num_crashes = [entry[1] for entry in data]
+
+    # Create a pie chart with improved aesthetics
+    plt.figure(figsize=(10, 8))
+    explode = [0.1] * len(types)  # Add some separation between slices
+
+    # Use wedgeprops to set properties of wedges (slices)
+    wedges, texts, autotexts = plt.pie(num_crashes, labels=None, autopct='%1.1f%%', startangle=140,
+                                       colors=plt.cm.Paired.colors, explode=explode,
+                                       wedgeprops=dict(width=0.4, edgecolor='w'))
+
+    # Add labels with adjusted distance from the center
+    label_distance = 2  # Adjust this value for better spacing
+    for i, type_name in enumerate(types):
+        angle = wedges[i].theta2 - (wedges[i].theta2 - wedges[i].theta1) / 2
+        radius = label_distance * 0.5 * wedges[i].r
+        x = radius * np.cos(np.radians(angle))
+        y = radius * np.sin(np.radians(angle))
+        plt.text(x, y, type_name, ha="center", va="center", fontsize=10, fontweight='bold')
+
+    # Add a title
+    plt.title('Distribution of Crash Types by Intersection', fontsize=16)
+
+    # Show the plot
+    plt.show()
 
 def main():
     # Fetch data for scatter plot
@@ -213,6 +307,9 @@ def main():
 
     # Print counts for crash details
     print_crash_details_counts(intersection_counts, drunk_counts, weekday_counts)
+
+    make_drunk_fatalities_comparison_chart()
+    make_intersection_pie()
 
 if __name__ == "__main__":
     main()
